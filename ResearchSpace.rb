@@ -30,6 +30,8 @@ short notations - aliases:
  "pin radius, R"
  - check if two parameters have the same alias
 
+matrix logic
+
 =end
 
 module ResearchSpace
@@ -61,17 +63,21 @@ module ResearchSpace
           key,unit = key.split '['
           unless unit.nil?
             unit,t = unit.split ']'
-            unit.strip!
+            unit = '' if unit.nil?
+            unit.strip! unless unit.nil?
             key.strip!
           end
         end
-        if unit.nil? and not expr.nil? and expr =~ /[0-9.]+\s+([^\s]+)$/
-          unit = $1
-        end
-        if expr.nil? or expr.empty?
-          self[key,unit] = nil unless key.nil?
-        else
+        unless expr.nil? or expr.empty?
+          case expr
+            when /(^.*\d)\%$/ then
+              unit ||= '%'
+              expr = $1 + ' %'
+            when /[0-9.]+\s+([^\s]+)$/ then unit ||= $1
+          end
           self[key,unit] = expr
+        else
+          self[key,unit] = nil unless key.nil?
         end
         @params[key].comment = comment
       end
@@ -151,6 +157,7 @@ module ResearchSpace
     
     def [] key
 # p :[] => key
+      key = key.to_s
       if self.has? key
         return self.eval_expr @params[key].expression, @params[key].unit
       else
