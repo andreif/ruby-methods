@@ -83,6 +83,18 @@ module ResearchSpace
       end
     end
     
+    def key_unit key
+      unless key.nil?
+        key,unit = key.split '['
+        unless unit.nil?
+          unit,t = unit.split ']'
+          unit = '' if unit.nil?
+          unit.strip! unless unit.nil?
+          key.strip!
+        end
+      end
+      return [key,unit]
+    end
     
     def eval_expr long_expr, result_unit=nil
       result = ''
