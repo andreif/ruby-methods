@@ -18,7 +18,7 @@ class MCNP
       Kernel.puts "\n"
     end
     def print_info
-      fmt = '%7.2e nps/s/task'
+      fmt = '%7.2e nps/sec/task'
       min = max = nil
       r = ''
       @timestamps.each do |ts|
