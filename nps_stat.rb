@@ -36,3 +36,5 @@ def nps_stat log
   nps_stat_print curr_time, start_time, prev_nps, 0, tasks
   puts "\n"
 end
+
+

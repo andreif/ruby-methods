@@ -28,11 +28,13 @@ File.open($hostfile_path,'w+') do |f|
   f.write hostfile
 end
 
+#Kernel.system "rm runmpi.stdin" -stdin runmpi.stdin
 cmd = "mpirun -hostfile %s -np %d %s" % [ $hostfile_path, hostfile.strip.split("\n").count, args.join(' ') ]
 Kernel.puts "Command: " + cmd
 if $background
   Kernel.puts "starting in background..."
-  Kernel.system "at now <<!\n%s > runmpi.log\nrm %s\n!" % [cmd, $hostfile_path]
+  log = ''; 100.times { |i| break unless File.exists?(log = "runmpi%d.log" % i) }
+  Kernel.system "at now <<!\n%s > %s\nrm %s\n!" % [cmd, log, $hostfile_path]
 else
   Kernel.system cmd
   File.delete $hostfile_path
