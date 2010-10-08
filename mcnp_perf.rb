@@ -24,14 +24,18 @@ class MCNP
     end
     
     def plot
-      require './ascii-plotter.rb'
-      data_xy = []
-      start_time = @timestamps.first[-2]
-      @timestamps.each do |ts|
-        i,n1,n0,t1,t0,dn_dt = ts
-        data_xy << [(t1-start_time)/60/60, dn_dt]
+      begin
+        require './ascii-plotter.rb'
+        data_xy = []
+        start_time = @timestamps.first[-2]
+        @timestamps.each do |ts|
+          i,n1,n0,t1,t0,dn_dt = ts
+          data_xy << [(t1-start_time)/60/60, dn_dt]
+        end
+        ASCII_Plotter.new(data_xy)
+      rescue
+        Kernel.puts "Warning: 'ascii-plotter.rb' was not found by Ruby. Update its path variables if necessary."
       end
-      ASCII_Plotter.new(data_xy)
     end
     
     def print_info
