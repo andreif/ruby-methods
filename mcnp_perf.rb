@@ -25,6 +25,7 @@ class MCNP
     
     def plot
       begin
+p __FILE__
         require './ascii-plotter.rb'
         data_xy = []
         start_time = @timestamps.first[-2]
@@ -34,7 +35,7 @@ class MCNP
         end
         ASCII_Plotter.new(data_xy)
       rescue
-        Kernel.puts "Warning: 'ascii-plotter.rb' was not found by Ruby. Update its path variables if necessary."
+        Kernel.puts "Warning: 'ascii-plotter.rb' was not found by Ruby. Update path variables if necessary."
       end
     end
     

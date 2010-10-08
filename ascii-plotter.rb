@@ -20,7 +20,7 @@ class ASCII_Plotter
     end
   end
   def set_points
-    @plot = (('.'*@width))*(@height+1)
+    @plot = ((' '*@width))*(@height+1)
 #p @plot.length
     x_min,x_max = @x.minmax
     y_min,y_max = @y.minmax
