@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# (c) 2010, Andrei Fokau (andrei.fokau@neutron.kth.se)
 
 class MCNP
   class Performance
@@ -12,6 +13,7 @@ class MCNP
       self.get_timestamps
       self.get_dumps
       self.print
+      self.plot
     end
     
     def print
@@ -21,22 +23,37 @@ class MCNP
       Kernel.puts "\n"
     end
     
-    def print_info
-      fmt = '%7.2e nps/sec/task'
-      min = max = nil
-      r = ''
+    def plot
+      require './ascii-plotter.rb'
+      data_xy = []
+      start_time = @timestamps.first[-2]
       @timestamps.each do |ts|
         i,n1,n0,t1,t0,dn_dt = ts
-        max = [i, t1.strftime('%a %d %b %Y %H:%M:%S'), dn_dt] if max.nil? or max.last < dn_dt
-        min = [i, t1.strftime('%a %d %b %Y %H:%M:%S'), dn_dt] if min.nil? or min.last > dn_dt
+        data_xy << [(t1-start_time)/60/60, dn_dt]
+      end
+      ASCII_Plotter.new(data_xy)
+    end
+    
+    def print_info
+      fmt = '%7.2e nps/sec/task'
+      r = ''
+      last = min = max = nil
+      @timestamps.each do |ts|
+        i,n1,n0,t1,t0,dn_dt = ts
+        last = [i, t1.strftime('%a %d %b %Y %H:%M:%S'), dn_dt]
+        max = last if max.nil? or max.last < dn_dt
+        min = last if min.nil? or min.last > dn_dt
         r << "%s  #{fmt}\n" % [t1, dn_dt]
       end
       @dumps.each do |dm|
         r << "dump %s %s\n" % dm
       end
-      rr =  "  min: cycle %6d, %s, #{fmt}\n" % min
-      rr << "  max: cycle %6d, %s, #{fmt}\n" % max
-      rr << "  avg: #{fmt} \n\n" % (@timestamps.inject(0) { |sum,el| sum.to_f + el.last } / @timestamps.count)
+      rr =  "  last: cycle %6d, %s, #{fmt}\n" % last
+      rr << "  max:  cycle %6d, %s, #{fmt}\n" % max
+      rr << "  min:  cycle %6d, %s, #{fmt}\n" % min
+      rr << "  average performance: %25s#{fmt} \n\n" % [nil, 
+        (@timestamps.inject(0) { |sum,el| sum.to_f + el.last } / @timestamps.count)
+      ]
       Kernel.puts rr
       self.write 'Cycle data', (r+rr), '_perf.txt'
     end
@@ -84,10 +101,11 @@ class MCNP
         r << "%6d,  %10e,  %10e ;\n" % [i, dn_dt, t1-start_time]
       end
       r << "];\n"
-      r << "figure; plot(data(:,3)/60/60, data(:,2),'-','LineWidth',1.5); grid on; \nxlabel('Time, hours'); ylabel('Performace, nps/sec/task'); title('#{@filepath}')"
+      r << "figure; plot(data(:,3)/60/60, data(:,2),'-','LineWidth',1.5); grid on; \nxlabel('Time, hours'); ylabel('Performace, nps/sec/task'); \ntitle('#{@filepath}','interpreter','none')"
       self.write 'Cycle data for MATLAB', r, '_perf.m'
     end
   end
 end
 
+#MCNP::Performance.new('/Users/andrei/Workspace/Temp/mcnp_perf/input.log')
 MCNP::Performance.new(ARGV.first)
