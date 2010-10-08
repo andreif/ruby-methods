@@ -25,8 +25,8 @@ class MCNP
     
     def plot
       begin
-#p __FILE__
-        require 'ascii-plotter.rb' rescue require File.join( File.dirname(__FILE__), '/ascii-plotter.rb')
+#p File.dirname(__FILE__)
+        #(require 'ascii-plotter.rb') rescue (require './ascii-plotter.rb') rescue (require File.join( File.dirname(__FILE__), '/ascii-plotter.rb'))
         data_xy = []
         start_time = @timestamps.first[-2]
         @timestamps.each do |ts|
@@ -42,10 +42,11 @@ class MCNP
     def print_info
       fmt = '%7.2e nps/sec/task'
       r = ''
-      last = min = max = nil
+      first = last = min = max = nil
       @timestamps.each do |ts|
         i,n1,n0,t1,t0,dn_dt = ts
         last = [i, t1.strftime('%a %d %b %Y %H:%M:%S'), dn_dt]
+        first ||= last
         max = last if max.nil? or max.last < dn_dt
         min = last if min.nil? or min.last > dn_dt
         r << "%s  #{fmt}\n" % [t1, dn_dt]
@@ -53,7 +54,8 @@ class MCNP
       @dumps.each do |dm|
         r << "dump %s %s\n" % dm
       end
-      rr =  "  last: cycle %6d, %s, #{fmt}\n" % last
+      rr =  "  frst: cycle %6d, %s, #{fmt}\n" % first
+      rr << "  last: cycle %6d, %s, #{fmt}\n" % last
       rr << "  max:  cycle %6d, %s, #{fmt}\n" % max
       rr << "  min:  cycle %6d, %s, #{fmt}\n" % min
       rr << "  average performance: %25s#{fmt} \n\n" % [nil, 
@@ -109,6 +111,46 @@ class MCNP
       r << "figure; plot(data(:,3)/60/60, data(:,2),'-','LineWidth',1.5); grid on; \nxlabel('Time, hours'); ylabel('Performace, nps/sec/task'); \ntitle('#{@filepath}','interpreter','none')"
       self.write 'Cycle data for MATLAB', r, '_perf.m'
     end
+  end
+end
+
+class ASCII_Plotter
+  def initialize data_xy, w = 120, h = 26
+    @height = h
+    @width = w
+    @data = data_xy
+    self.set_limits
+    self.set_points
+    Kernel.puts @plot
+  end
+  def set_limits
+    @x = []
+    @y = []
+    @data.each do |xy|
+      x,y = xy
+      @x << x
+      @y << y
+    end
+  end
+  def set_points
+    @plot = ((' '*@width))*(@height+1)
+#p @plot.length
+    x_min,x_max = @x.minmax
+    y_min,y_max = @y.minmax
+    dw = (x_max - x_min).to_f / @width
+    dh = (y_max - y_min).to_f / @height
+    @data.each_with_index do |xy,i|
+      x,y = xy
+      w = ((x.to_f - x_min) / dw).round
+      h = ((y.to_f - y_min) / dh).round
+#p [h,y, y_min,(y - y_min)]
+      h = @height - h
+      pos = (h)*(@width) + w
+      pos -= 1 if w == @width # correction
+#p [x,y,w,h,pos]
+      @plot[pos.to_i] = 'x'
+    end
+    @plot = @plot.scan(/.{1,#{@width}}/).join("\n")
   end
 end
 
