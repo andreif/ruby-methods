@@ -25,8 +25,8 @@ class MCNP
     
     def plot
       begin
-p __FILE__
-        require './ascii-plotter.rb'
+#p __FILE__
+        require 'ascii-plotter.rb' rescue require File.join( File.dirname(__FILE__), '/ascii-plotter.rb')
         data_xy = []
         start_time = @timestamps.first[-2]
         @timestamps.each do |ts|
